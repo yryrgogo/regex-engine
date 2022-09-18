@@ -2,8 +2,8 @@ use super::token::Token;
 
 pub struct Node<'a> {
     token: &'a Token,
-    left: Option<Box<Node<'a>>>,
-    right: Option<Box<Node<'a>>>,
+    pub left: Option<Box<Node<'a>>>,
+    pub right: Option<Box<Node<'a>>>,
 }
 
 impl<'a> Node<'a> {
