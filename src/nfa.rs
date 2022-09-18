@@ -1,16 +1,15 @@
 use std::collections::HashSet;
 
-#[derive(Debug, Clone)]
-struct State {}
+use crate::automaton::State;
 
 #[derive(Debug, Clone)]
-struct NFA {
-    start: State,
-    accepts: HashSet<State>,
+pub struct NFA {
+    pub start: State,
+    pub accepts: HashSet<State>,
 }
 
 impl NFA {
-    fn transition(prev_state: State, input: String) {
+    pub fn transition(&self, prev_state: State, input: String) {
         todo!("transition {:?} with {}", prev_state, input);
     }
 }

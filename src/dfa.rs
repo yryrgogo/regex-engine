@@ -1,16 +1,14 @@
 use std::collections::HashSet;
+use crate::automaton::State;
 
 #[derive(Debug, Clone)]
-struct State {}
-
-#[derive(Debug, Clone)]
-struct DFA {
-    start: State,
-    accepts: HashSet<State>,
+pub struct DFA {
+    pub start: State,
+    pub accepts: HashSet<State>,
 }
 
 impl DFA {
-    fn transition(prev_state: State, input: String) {
+    pub fn transition(&self, prev_state: State, input: String) {
         if input.len() == 0 {
             panic!("transition with empty input is not allowed");
         }
