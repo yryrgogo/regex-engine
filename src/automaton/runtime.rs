@@ -1,4 +1,4 @@
-use crate::automaton::{FiniteAutomaton, State};
+use super::automaton::{FiniteAutomaton, State};
 
 struct AutomatonRuntime {
     automaton: FiniteAutomaton,

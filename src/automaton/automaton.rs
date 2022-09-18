@@ -1,4 +1,4 @@
-use crate::{dfa::DFA, nfa::NFA};
+use super::{dfa::DFA, nfa::NFA};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct State {}

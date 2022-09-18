@@ -1,5 +1,6 @@
 use std::collections::HashSet;
-use crate::automaton::State;
+
+use super::automaton::State;
 
 #[derive(Debug, Clone)]
 pub struct DFA {
