@@ -1,11 +1,11 @@
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenKind {
-    CHAR = 0,
-    OP_UNION = 1,
-    OP_STAR = 2,
-    LPAREN = 3,
-    RPAREN = 4,
-    EOF = 5,
+    Char,
+    Union,
+    Star,
+    LParen,
+    RParen,
+    Eof,
 }
 
 #[derive(Debug)]

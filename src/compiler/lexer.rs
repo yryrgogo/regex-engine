@@ -1,6 +1,7 @@
 use super::token::{Token, TokenKind};
 
-struct Lexer {
+#[derive(Debug, Clone)]
+pub struct Lexer {
     input: String,
     pos: usize,
 }
@@ -10,21 +11,34 @@ impl Lexer {
         Self { input, pos: 0 }
     }
 
-    pub fn next_token(&mut self) -> Token {
-        if self.pos >= self.input.len() {
-            return Token::new(TokenKind::EOF, None);
-        }
-
-        let c = self.input.chars().nth(self.pos).unwrap();
+    fn next(&mut self) -> Token {
+        let c = self.input.chars().nth(self.pos);
         self.pos += 1;
 
-        match c {
-            'a'..='z' => Token::new(TokenKind::CHAR, Some(c.to_string())),
-            '|' => Token::new(TokenKind::OP_UNION, None),
-            '*' => Token::new(TokenKind::OP_STAR, None),
-            '(' => Token::new(TokenKind::LPAREN, None),
-            ')' => Token::new(TokenKind::RPAREN, None),
-            _ => panic!("invalid character: {}", c),
+        if let Some(ch) = c {
+            match ch {
+                'a'..='z' => Token::new(TokenKind::Char, Some(ch.to_string())),
+                '|' => Token::new(TokenKind::Union, None),
+                '*' => Token::new(TokenKind::Star, None),
+                '(' => Token::new(TokenKind::LParen, None),
+                ')' => Token::new(TokenKind::RParen, None),
+                _ => panic!("invalid character: {}", ch),
+            }
+        } else {
+            Token::new(TokenKind::Eof, None)
         }
+    }
+
+    pub fn tokenize(&mut self) -> Vec<Token> {
+        let mut tokens = vec![];
+        loop {
+            let token = self.next();
+            let kind = token.kind.clone();
+            tokens.push(token);
+            if kind == TokenKind::Eof {
+                break;
+            }
+        }
+        tokens
     }
 }
