@@ -2,11 +2,11 @@ use std::collections::{HashMap, HashSet};
 
 use crate::automaton::{nfa::NFA, State, StateSet};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct NFAFragment {
     pub start: Option<State>,
     pub accepts: Option<StateSet>,
-    pub map: HashMap<NFAInput, HashSet<State>>,
+    pub map: HashMap<NFAInput, StateSet>,
 }
 
 impl Default for NFAFragment {
@@ -20,11 +20,19 @@ impl Default for NFAFragment {
 }
 
 impl NFAFragment {
-    pub fn new(start: State, accepts: StateSet) -> Self {
-        Self {
-            start: Some(start),
-            accepts: Some(accepts),
-            map: HashMap::new(),
+    pub fn new(start: State, accepts: StateSet, map: Option<HashMap<NFAInput, StateSet>>) -> Self {
+        if let Some(m) = map {
+            Self {
+                start: Some(start),
+                accepts: Some(accepts),
+                map: m,
+            }
+        } else {
+            Self {
+                start: Some(start),
+                accepts: Some(accepts),
+                map: HashMap::new(),
+            }
         }
     }
 

@@ -1,6 +1,9 @@
+use crate::automaton::nfa::NFA;
+
 use super::{
-    ast::{Node, NodeKind},
+    ast::{Interpreter, NewNode, NodeKind},
     token::{Token, TokenKind},
+    Context,
 };
 
 /// parse a list of tokens into an AST
@@ -14,7 +17,7 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Node {
+    pub fn parse(&mut self) -> NFA {
         self.expr()
     }
 
@@ -45,68 +48,68 @@ impl Parser {
         }
     }
 
-    pub fn new_node(&mut self, kind: NodeKind, left: Option<Node>, right: Option<Node>) -> Node {
-        if kind == NodeKind::Char {
-            panic!("new_node with CHAR is not allowed");
-        }
-
-        match (left, right) {
-            (None, None) => Node::new(kind, None, None, None),
-            (None, Some(_)) => unreachable!(),
-            (Some(left), None) => Node::new(kind, Some(Box::new(left)), None, None),
-            (Some(left), Some(right)) => {
-                Node::new(kind, Some(Box::new(left)), Some(Box::new(right)), None)
-            }
-        }
+    pub fn new_union(&mut self, left: Option<NewNode>, right: Option<NewNode>) -> NewNode {
+        NewNode::new(NodeKind::Union, None, left, right)
     }
 
-    pub fn new_char(&mut self, ch: String) -> Node {
-        Node::new(NodeKind::Char, None, None, Some(ch))
+    pub fn new_concat(&mut self, left: Option<NewNode>, right: Option<NewNode>) -> NewNode {
+        NewNode::new(NodeKind::Concat, None, left, right)
+    }
+
+    pub fn new_star(&mut self, origin: Option<NewNode>) -> NewNode {
+        NewNode::new(NodeKind::Star, None, origin, None)
+    }
+
+    pub fn new_char(&mut self, ch: String) -> NewNode {
+        NewNode::new(NodeKind::Char, Some(ch), None, None)
     }
 
     /// expr = sub_expr EOF
-    pub fn expr(&mut self) -> Node {
+    pub fn expr(&mut self) -> NFA {
         let node = self.sub_expr();
         self.expect(TokenKind::Eof);
-        node
+
+        let mut context = Context::default();
+        let fragment = node.assemble(&mut context);
+        let nfa = fragment.build();
+        nfa
     }
 
     /// sub_expr = (seq '|' sub_expr) | seq
-    pub fn sub_expr(&mut self) -> Node {
+    pub fn sub_expr(&mut self) -> NewNode {
         let node = self.seq();
 
         if self.peek().kind == TokenKind::Union {
             self.expect(TokenKind::Union);
             let right = self.sub_expr();
-            self.new_node(NodeKind::Union, Some(node), Some(right))
+            let new = self.new_union(Some(node), Some(right));
+            new
         } else {
             node
         }
     }
 
     /// sequence = sub_sequence | ""
-    pub fn seq(&mut self) -> Node {
+    pub fn seq(&mut self) -> NewNode {
         match self.peek().kind {
             TokenKind::LParen | TokenKind::Char => {
                 let node = self.sub_seq();
                 node
             }
             // FIXME: RPAREN が来るケースもあるようだが具体例を思いつかないのでそのテストケースを作った時に追加する
-            TokenKind::Union | TokenKind::Eof => {
-                Node::new(NodeKind::Char, None, None, Some("".to_string()))
-            }
+            TokenKind::Union | TokenKind::Eof => self.new_char("".to_string()),
             _ => panic!("unexpected token: {:?}", self.peek()),
         }
     }
 
     /// sub_sequence = star sub_sequence | star
-    pub fn sub_seq(&mut self) -> Node {
+    pub fn sub_seq(&mut self) -> NewNode {
         let node = self.star();
 
         match self.peek().kind {
             TokenKind::LParen | TokenKind::Char => {
                 let right = self.sub_seq();
-                self.new_node(NodeKind::Concat, Some(node), Some(right))
+                self.new_concat(Some(node), Some(right))
             }
             TokenKind::Union | TokenKind::RParen | TokenKind::Eof => {
                 return node;
@@ -116,17 +119,17 @@ impl Parser {
     }
 
     /// star = primary | primary"*"
-    pub fn star(&mut self) -> Node {
+    pub fn star(&mut self) -> NewNode {
         let mut node = self.primary();
         if self.peek().kind == TokenKind::Star {
             self.expect(TokenKind::Star);
-            node = self.new_node(NodeKind::Star, Some(node), None);
+            node = self.new_star(Some(node));
         }
         node
     }
 
     /// primary = "(" sub_expr ")" | CHAR
-    pub fn primary(&mut self) -> Node {
+    pub fn primary(&mut self) -> NewNode {
         let token = self.next_token();
         let ch = token.val.clone();
 

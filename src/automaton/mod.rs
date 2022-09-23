@@ -7,10 +7,12 @@ pub mod nfa;
 pub mod runtime;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct State {}
+pub struct State {
+    pub id: usize,
+}
 impl State {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(id: usize) -> Self {
+        Self { id }
     }
 }
 

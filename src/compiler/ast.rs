@@ -5,6 +5,10 @@ use super::{
     Context,
 };
 
+pub trait Interpreter {
+    fn assemble(&self, context: &mut Context) -> NFAFragment;
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeKind {
     Char,
@@ -14,33 +18,11 @@ pub enum NodeKind {
 }
 
 #[derive(Debug, Clone)]
-pub struct Node {
-    kind: NodeKind,
-    pub left: Option<Box<Node>>,
-    pub right: Option<Box<Node>>,
-    pub ch: Option<String>,
-}
-
-impl Node {
-    pub fn new(
-        kind: NodeKind,
-        left: Option<Box<Node>>,
-        right: Option<Box<Node>>,
-        ch: Option<String>,
-    ) -> Self {
-        Self {
-            kind,
-            left,
-            right,
-            ch,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
 pub enum NewNode {
     Char(CharacterNode),
     Union(UnionNode),
+    Concat(ConcatNode),
+    Star(StarNode),
 }
 
 impl Interpreter for NewNode {
@@ -48,12 +30,50 @@ impl Interpreter for NewNode {
         match self {
             NewNode::Char(node) => node.assemble(ctx),
             NewNode::Union(node) => node.assemble(ctx),
+            NewNode::Concat(node) => node.assemble(ctx),
+            NewNode::Star(node) => node.assemble(ctx),
         }
     }
 }
 
-trait Interpreter {
-    fn assemble(&self, context: &mut Context) -> NFAFragment;
+impl NewNode {
+    pub fn new(
+        kind: NodeKind,
+        ch: Option<String>,
+        left: Option<NewNode>,
+        right: Option<NewNode>,
+    ) -> Self {
+        match kind {
+            NodeKind::Char => Self::Char(CharacterNode {
+                ch: ch.unwrap_or_else(|| panic!("ch is required for NodeKind::Char")),
+            }),
+            NodeKind::Union => Self::Union(UnionNode {
+                left: Box::new(
+                    left.unwrap_or_else(|| panic!("left NewNode is required for NodeKind::Union")),
+                ),
+                right: Box::new(
+                    right
+                        .unwrap_or_else(|| panic!("right NewNode is required for NodeKind::Union")),
+                ),
+            }),
+            NodeKind::Concat => {
+                Self::Concat(ConcatNode {
+                    left: Box::new(left.unwrap_or_else(|| {
+                        panic!("left NewNode is required for NodeKind::Concat")
+                    })),
+                    right: Box::new(right.unwrap_or_else(|| {
+                        panic!("right NewNode is required for NodeKind::Concat")
+                    })),
+                })
+            }
+            NodeKind::Star => Self::Star(StarNode {
+                origin: Box::new(
+                    left.unwrap_or_else(|| panic!("right NewNode is required for NodeKind::Star")),
+                ),
+            }),
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -66,7 +86,8 @@ impl Interpreter for CharacterNode {
         let start = context.new_state();
         let accept = context.new_state();
 
-        let mut fragment = NFAFragment::new(start, HashSet::from_iter(vec![accept].into_iter()));
+        let mut fragment =
+            NFAFragment::new(start, HashSet::from_iter(vec![accept].into_iter()), None);
         fragment.connect(NFAInput::new(self.ch.clone(), start), accept);
         fragment
     }
@@ -83,7 +104,6 @@ impl Interpreter for UnionNode {
         let left = self.left.assemble(context);
         let right = self.right.assemble(context);
 
-        let start = context.new_state();
         let mut accepts = left
             .accepts
             .unwrap_or_else(|| panic!("left.accepts is None"))
@@ -94,7 +114,8 @@ impl Interpreter for UnionNode {
                 .unwrap_or_else(|| panic!("right.accepts is None")),
         );
 
-        let mut fragment = NFAFragment::new(start, accepts);
+        let start = context.new_state();
+        let mut fragment = NFAFragment::new(start, accepts, None);
         fragment.connect(
             NFAInput::new("".to_string(), start),
             left.start.unwrap_or_else(|| panic!("left.start is None")),
@@ -118,11 +139,14 @@ impl Interpreter for ConcatNode {
         let left = self.left.assemble(context);
         let right = self.right.assemble(context);
 
+        let mut map = left.map.clone();
+        map.extend(right.map);
         let mut fragment = NFAFragment::new(
             left.start.unwrap_or_else(|| panic!("left.start is None")),
             right
                 .accepts
                 .unwrap_or_else(|| panic!("right.accepts is None")),
+            Some(map),
         );
 
         for state in left
@@ -178,5 +202,57 @@ impl Interpreter for StarNode {
         );
 
         fragment
+    }
+}
+
+#[cfg(test)]
+mod ast_tests {
+    use std::collections::HashMap;
+
+    use crate::automaton::{State, StateSet};
+
+    use super::*;
+
+    #[test]
+    fn concat_assemble() {
+        let node = ConcatNode {
+            left: Box::new(NewNode::Char(CharacterNode {
+                ch: "a".to_string(),
+            })),
+            right: Box::new(NewNode::Char(CharacterNode {
+                ch: "b".to_string(),
+            })),
+        };
+
+        let mut ctx = Context::default();
+        let fragment = node.assemble(&mut ctx);
+
+        let mut map: HashMap<NFAInput, StateSet> = HashMap::new();
+
+        let mut accepts = HashSet::<State>::new();
+        let mut ss0 = HashSet::<State>::new();
+        let mut ss1 = HashSet::<State>::new();
+
+        let left_start = State::new(0);
+        let left_accept = State::new(1);
+        let right_start = State::new(2);
+        let right_accept = State::new(3);
+        ss0.insert(left_accept);
+        ss1.insert(right_start);
+
+        accepts.insert(right_accept);
+
+        map.insert(NFAInput::new("a".to_string(), left_start), ss0);
+        map.insert(NFAInput::new("".to_string(), left_accept), ss1);
+        map.insert(NFAInput::new("b".to_string(), right_start), accepts.clone());
+
+        assert_eq!(
+            fragment,
+            NFAFragment {
+                start: Some(left_start),
+                accepts: Some(accepts),
+                map,
+            }
+        );
     }
 }

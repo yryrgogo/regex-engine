@@ -9,7 +9,7 @@ fn main() {
     println!("{:?}", tokens);
 
     let mut parser = Parser::new(tokens);
-    let node = parser.parse();
+    let nfa = parser.parse();
 
-    println!("{:#?}", node);
+    println!("{:#?}", nfa);
 }
