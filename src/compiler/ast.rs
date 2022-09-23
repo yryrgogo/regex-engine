@@ -71,7 +71,6 @@ impl NewNode {
                     left.unwrap_or_else(|| panic!("right NewNode is required for NodeKind::Star")),
                 ),
             }),
-            _ => unreachable!(),
         }
     }
 }

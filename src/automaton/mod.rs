@@ -19,5 +19,5 @@ impl State {
 pub type StateSet = HashSet<State>;
 
 pub trait Transition {
-    fn transition(&self, map: HashMap<NFAInput, StateSet>, input: NFAInput) -> HashSet<State>;
+    fn transition(&self, input: &NFAInput) -> HashSet<State>;
 }
