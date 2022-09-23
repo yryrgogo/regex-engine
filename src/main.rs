@@ -1,5 +1,7 @@
 use compiler::{lexer::Lexer, parser::Parser};
 
+use crate::automaton::runtime::Runtime;
+
 mod automaton;
 mod compiler;
 
@@ -12,4 +14,10 @@ fn main() {
     let nfa = parser.parse();
 
     println!("{:#?}", nfa);
+
+    let dfa = nfa.nfa2dfa();
+    let mut runtime = Runtime::new(&dfa);
+
+    let input = "abcbc".to_string();
+    runtime.run(input);
 }

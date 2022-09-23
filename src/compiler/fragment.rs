@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 
 use crate::automaton::{nfa::NFA, State, StateSet};
 
@@ -37,7 +37,7 @@ impl NFAFragment {
     }
 
     pub fn connect(&mut self, nfa_input: NFAInput, next: State) {
-        let mut set = HashSet::new();
+        let mut set = BTreeSet::new();
         set.insert(next);
         self.map.insert(nfa_input, set);
     }

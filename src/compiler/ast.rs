@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use super::{
     fragment::{NFAFragment, NFAInput},
@@ -86,7 +86,7 @@ impl Interpreter for CharacterNode {
         let accept = context.new_state();
 
         let mut fragment =
-            NFAFragment::new(start, HashSet::from_iter(vec![accept].into_iter()), None);
+            NFAFragment::new(start, BTreeSet::from_iter(vec![accept].into_iter()), None);
         fragment.connect(NFAInput::new(self.ch.clone(), start), accept);
         fragment
     }
@@ -228,9 +228,9 @@ mod ast_tests {
 
         let mut map: HashMap<NFAInput, StateSet> = HashMap::new();
 
-        let mut accepts = HashSet::<State>::new();
-        let mut ss0 = HashSet::<State>::new();
-        let mut ss1 = HashSet::<State>::new();
+        let mut accepts = BTreeSet::<State>::new();
+        let mut ss0 = BTreeSet::<State>::new();
+        let mut ss1 = BTreeSet::<State>::new();
 
         let left_start = State::new(0);
         let left_accept = State::new(1);

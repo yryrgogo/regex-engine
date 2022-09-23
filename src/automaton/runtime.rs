@@ -1,31 +1,31 @@
-use super::{dfa::DFA, State};
+use super::{dfa::DFA, StateSet};
 
-#[derive(Debug)]
-struct Runtime {
-    dfa: DFA,
-    current_state: State,
+pub struct Runtime<'a> {
+    dfa: &'a DFA<'a>,
+    current_state: StateSet,
 }
 
-impl Runtime {
-    fn new(dfa: DFA) -> Self {
+impl<'a> Runtime<'a> {
+    pub fn new(dfa: &'a DFA) -> Self {
         Self {
-            dfa: dfa.clone(),
-            current_state: dfa.start,
+            dfa: dfa,
+            current_state: dfa.start.clone(),
         }
     }
 
-    fn run(&self, input: String) -> bool {
+    pub fn run(&mut self, input: String) -> bool {
         for c in input.chars() {
-            self.dfa.transition(self.current_state, c.to_string());
+            self.do_transition(c.to_string());
         }
         self.is_accept()
     }
 
-    fn do_transition(&self, input: String) {
-        self.dfa.transition(self.current_state.clone(), input);
+    fn do_transition(&mut self, input: String) {
+        let next_state = (self.dfa.transition)(&self.current_state, input);
+        self.current_state = next_state;
     }
 
     fn is_accept(&self) -> bool {
-        self.dfa.accepts.contains(&self.current_state)
+        self.dfa.accepts.intersection(&self.current_state).count() > 0
     }
 }
