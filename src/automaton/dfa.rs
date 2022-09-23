@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use super::automaton::State;
+use super::State;
 
 #[derive(Debug, Clone)]
 pub struct DFA {

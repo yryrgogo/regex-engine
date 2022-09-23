@@ -1,15 +1,22 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-use super::automaton::State;
+use crate::compiler::fragment::NFAInput;
+
+use super::{State, StateSet, Transition};
 
 #[derive(Debug, Clone)]
 pub struct NFA {
-    pub start: State,
-    pub accepts: HashSet<State>,
+    pub start: Option<State>,
+    pub accepts: Option<StateSet>,
+    pub map: Option<HashMap<NFAInput, StateSet>>,
 }
 
-impl NFA {
-    pub fn transition(&self, prev_state: State, input: String) {
-        todo!("transition {:?} with {}", prev_state, input);
+impl Transition for NFA {
+    fn transition(&self, map: HashMap<NFAInput, StateSet>, input: NFAInput) -> HashSet<State> {
+        if let Some(states) = map.get(&input) {
+            states.clone()
+        } else {
+            panic!("no state found for {:?}", input);
+        }
     }
 }
