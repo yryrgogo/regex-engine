@@ -42,7 +42,7 @@ impl NFAFragment {
         new_fragment
     }
 
-    fn new_skeleton(&self) -> Self {
+    pub fn new_skeleton(&self) -> Self {
         let new_fragment = NFAFragment {
             start: None,
             accepts: None,
