@@ -1,9 +1,11 @@
 use crate::automaton::runtime::Runtime;
 use automaton::nfa::NFA;
 use compiler::{lexer::Lexer, parser::Parser};
+use viz::graph_viz::GraphViz;
 
 mod automaton;
 mod compiler;
+mod viz;
 
 pub struct RegExp {
     nfa: NFA,
@@ -30,6 +32,7 @@ impl RegExp {
     }
 
     pub fn render_nfa(&self, filename: &str) {
-        self.nfa.render_nfa_graph(filename);
+        let viz = GraphViz {};
+        viz.render_nfa_graph(&self.nfa, filename);
     }
 }
