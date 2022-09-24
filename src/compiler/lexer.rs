@@ -33,11 +33,11 @@ impl Lexer {
         let mut tokens = vec![];
         loop {
             let token = self.next();
-            let kind = token.kind.clone();
-            tokens.push(token);
-            if kind == TokenKind::Eof {
+            if &token.kind == &TokenKind::Eof {
+                tokens.push(token);
                 break;
             }
+            tokens.push(token);
         }
         tokens
     }
