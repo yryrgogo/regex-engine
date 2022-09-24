@@ -1,7 +1,5 @@
 use std::collections::BTreeSet;
 
-use crate::compiler::fragment::NFAInput;
-
 pub mod dfa;
 pub mod nfa;
 pub mod runtime;
@@ -17,7 +15,3 @@ impl State {
 }
 
 pub type StateSet = BTreeSet<State>;
-
-pub trait NfaTransition {
-    fn transition(&self, input: &NFAInput) -> BTreeSet<State>;
-}

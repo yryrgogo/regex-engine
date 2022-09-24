@@ -2,7 +2,7 @@ use std::collections::{BTreeSet, HashMap};
 
 use crate::compiler::fragment::NFAInput;
 
-use super::{dfa::DFA, NfaTransition, State, StateSet};
+use super::{dfa::DFA, State, StateSet};
 
 #[derive(Debug, Clone)]
 pub struct NFA {
@@ -11,12 +11,12 @@ pub struct NFA {
     pub map: Option<HashMap<NFAInput, StateSet>>,
 }
 
-impl NfaTransition for NFA {
-    fn transition(&self, input: &NFAInput) -> StateSet {
+impl NFA {
+    fn transition(&self, input: &NFAInput) -> Option<StateSet> {
         if let Some(states) = self.map.as_ref().unwrap().get(input) {
-            states.clone()
+            Some(states.clone())
         } else {
-            panic!("no state found for {:?}", input);
+            None
         }
     }
 }
@@ -33,9 +33,12 @@ impl NFA {
             done.insert(state);
 
             let input = NFAInput::new("".to_string(), state);
-            for next_state in self.transition(&input) {
-                if !done.contains(&next_state) {
-                    que.insert(next_state);
+            let next_states = self.transition(&input);
+            if let Some(states) = next_states {
+                for next_state in states {
+                    if !done.contains(&next_state) {
+                        que.insert(next_state);
+                    }
                 }
             }
         }
@@ -44,12 +47,14 @@ impl NFA {
 
     pub fn nfa2dfa(&self) -> DFA {
         let transition = |prev_states: &StateSet, input: String| {
-            let mut next_states = BTreeSet::<State>::new();
+            let mut new_states = BTreeSet::<State>::new();
             for state in prev_states {
-                let states = self.transition(&NFAInput::new(input.clone(), state.clone()));
-                next_states.extend(states);
+                let next_states = self.transition(&NFAInput::new(input.clone(), state.clone()));
+                if let Some(states) = next_states {
+                    new_states.extend(states);
+                }
             }
-            self.epsilon_expand(next_states)
+            self.epsilon_expand(new_states)
         };
 
         let mut tmp = BTreeSet::new();
