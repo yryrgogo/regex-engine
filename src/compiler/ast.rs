@@ -105,16 +105,21 @@ impl Interpreter for UnionNode {
 
         let mut accepts = left
             .accepts
-            .unwrap_or_else(|| panic!("left.accepts is None"))
-            .clone();
+            .clone()
+            .unwrap_or_else(|| panic!("left.accepts is None"));
         accepts.extend(
             &right
                 .accepts
+                .clone()
                 .unwrap_or_else(|| panic!("right.accepts is None")),
         );
 
+        let mut fragment = left.new_skeleton();
+        fragment.union(&right);
         let start = context.new_state();
-        let mut fragment = NFAFragment::new(start, accepts, None);
+        fragment.start = Some(start);
+        fragment.accepts = Some(accepts);
+
         fragment.connect(
             NFAInput::new("".to_string(), start),
             left.start.unwrap_or_else(|| panic!("left.start is None")),
@@ -123,6 +128,7 @@ impl Interpreter for UnionNode {
             NFAInput::new("".to_string(), start),
             right.start.unwrap_or_else(|| panic!("right.start is None")),
         );
+        println!("fragment: {:#?}", &fragment);
         fragment
     }
 }

@@ -37,17 +37,20 @@ impl NFAFragment {
     }
 
     pub fn connect(&mut self, nfa_input: NFAInput, next: State) {
-        let mut set = BTreeSet::new();
-        set.insert(next);
-        self.map.insert(nfa_input, set);
+        self.map
+            .entry(nfa_input)
+            .or_insert_with(|| {
+                let mut set = BTreeSet::new();
+                set.insert(next);
+                set
+            })
+            .insert(next);
     }
 
-    pub fn union(&self, fragment: Self) -> Self {
-        let mut new_fragment = self.new_skeleton();
-        for (input, states) in fragment.map {
-            new_fragment.map.insert(input, states);
+    pub fn union(&mut self, fragment: &Self) {
+        for (input, states) in fragment.map.iter() {
+            self.map.insert(input.clone(), states.clone());
         }
-        new_fragment
     }
 
     pub fn new_skeleton(&self) -> Self {

@@ -21,49 +21,6 @@ impl Parser {
         self.expr()
     }
 
-    pub fn next_token(&mut self) -> &Token {
-        let token = self
-            .tokens
-            .get(self.current)
-            .unwrap_or_else(|| panic!("unexpected index: {}/{}", self.current, self.tokens.len()));
-        self.current += 1;
-        token
-    }
-
-    pub fn peek(&mut self) -> &Token {
-        self.tokens
-            .get(self.current)
-            .unwrap_or_else(|| panic!("unexpected index: {}/{}", self.current, self.tokens.len()))
-    }
-
-    pub fn expect(&mut self, kind: TokenKind) {
-        if self.tokens[self.current].kind == kind {
-            self.current += 1;
-            return;
-        } else {
-            panic!(
-                "expected {:?}, got {:?}",
-                kind, self.tokens[self.current].kind
-            );
-        }
-    }
-
-    pub fn new_union(&mut self, left: Option<NewNode>, right: Option<NewNode>) -> NewNode {
-        NewNode::new(NodeKind::Union, None, left, right)
-    }
-
-    pub fn new_concat(&mut self, left: Option<NewNode>, right: Option<NewNode>) -> NewNode {
-        NewNode::new(NodeKind::Concat, None, left, right)
-    }
-
-    pub fn new_star(&mut self, origin: Option<NewNode>) -> NewNode {
-        NewNode::new(NodeKind::Star, None, origin, None)
-    }
-
-    pub fn new_char(&mut self, ch: String) -> NewNode {
-        NewNode::new(NodeKind::Char, Some(ch), None, None)
-    }
-
     /// expr = sub_expr EOF
     pub fn expr(&mut self) -> NFA {
         let node = self.sub_expr();
@@ -142,5 +99,48 @@ impl Parser {
             }
             _ => unreachable!(),
         }
+    }
+
+    pub fn next_token(&mut self) -> &Token {
+        let token = self
+            .tokens
+            .get(self.current)
+            .unwrap_or_else(|| panic!("unexpected index: {}/{}", self.current, self.tokens.len()));
+        self.current += 1;
+        token
+    }
+
+    pub fn peek(&mut self) -> &Token {
+        self.tokens
+            .get(self.current)
+            .unwrap_or_else(|| panic!("unexpected index: {}/{}", self.current, self.tokens.len()))
+    }
+
+    pub fn expect(&mut self, kind: TokenKind) {
+        if self.tokens[self.current].kind == kind {
+            self.current += 1;
+            return;
+        } else {
+            panic!(
+                "expected {:?}, got {:?}",
+                kind, self.tokens[self.current].kind
+            );
+        }
+    }
+
+    pub fn new_union(&mut self, left: Option<NewNode>, right: Option<NewNode>) -> NewNode {
+        NewNode::new(NodeKind::Union, None, left, right)
+    }
+
+    pub fn new_concat(&mut self, left: Option<NewNode>, right: Option<NewNode>) -> NewNode {
+        NewNode::new(NodeKind::Concat, None, left, right)
+    }
+
+    pub fn new_star(&mut self, origin: Option<NewNode>) -> NewNode {
+        NewNode::new(NodeKind::Star, None, origin, None)
+    }
+
+    pub fn new_char(&mut self, ch: String) -> NewNode {
+        NewNode::new(NodeKind::Char, Some(ch), None, None)
     }
 }
