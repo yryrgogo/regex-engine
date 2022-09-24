@@ -25,7 +25,12 @@ impl GraphViz {
     }
 
     fn add_edge(&self, output: &mut String, from: usize, to: usize, label: &str) {
-        output.push_str(&format!("  {} -> {} [label = \"{}\"];\n", from, to, label));
+        output.push_str(&format!(
+            "  {} -> {} [label = \"{}\"];\n",
+            from,
+            to,
+            if label.len() == 0 { "ε" } else { label }
+        ));
     }
 
     pub fn render_nfa_graph(&self, nfa: &NFA, filename: &str) {
