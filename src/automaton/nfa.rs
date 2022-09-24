@@ -19,9 +19,7 @@ impl NFA {
             None
         }
     }
-}
 
-impl NFA {
     pub fn epsilon_expand(&self, states: StateSet) -> StateSet {
         let mut que = BTreeSet::<State>::new();
         que.extend(states);

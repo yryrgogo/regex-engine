@@ -1,23 +1,10 @@
-use compiler::{lexer::Lexer, parser::Parser};
-
-use crate::automaton::runtime::Runtime;
-
-mod automaton;
-mod compiler;
+use regex_engine::RegExp;
 
 fn main() {
-    let mut lexer = Lexer::new("a|(bc)*".to_string());
-    let tokens = lexer.tokenize();
+    let regex = "a|(bc)*".to_string();
+    let regexp = RegExp::new(regex);
 
-    let mut parser = Parser::new(tokens);
-    let nfa = parser.parse();
-
-    nfa.render_nfa_graph("nfa.dot");
-
-    let dfa = nfa.nfa2dfa();
-    let mut runtime = Runtime::new(&dfa);
-
-    let input = "ab".to_string();
-    let result = runtime.run(input);
+    let input = "a".to_string();
+    let result = regexp.matches(input);
     println!("result: {}", result);
 }

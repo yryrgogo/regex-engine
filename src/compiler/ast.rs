@@ -128,7 +128,6 @@ impl Interpreter for UnionNode {
             NFAInput::new("".to_string(), start),
             right.start.unwrap_or_else(|| panic!("right.start is None")),
         );
-        println!("fragment: {:#?}", &fragment);
         fragment
     }
 }
